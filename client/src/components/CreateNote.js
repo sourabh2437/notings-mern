@@ -5,9 +5,8 @@ import '../App.css';
 import {Row,Col} from 'reactstrap';
 import moment from 'moment';
 import axios from 'axios';
-import Notifications, {notify} from 'react-notify-toast';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Throttle } from 'react-throttle';
+import $ from 'jquery'
 class  CreateNote extends Component{
   constructor(props){
     super(props);
@@ -18,7 +17,10 @@ class  CreateNote extends Component{
       titleHtml:"",
       creation_date : null,
       updated_date :null,
-      aResponse:[]
+      aResponse:[],
+      aPurchaseOrder:[],
+      aNewQuotation:[],
+      aNewPurchaseOrder:[]
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleTitleChange = this.handleTitleChange.bind(this);
@@ -52,10 +54,11 @@ class  CreateNote extends Component{
      });
   }
   fnOnAnalyse(){
-    const { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date } = this.state;
-
-    axios.post('/notes', { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date })
+     const { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date } = this.state;
+     axios.post('/notes', { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date })
       .then((result) => {
+        //this.newNoteId = result.data._id;
+        //console.log(result);
         //this.props.history.push("/")
       });
       var aNotes = [];
@@ -99,8 +102,154 @@ class  CreateNote extends Component{
      }
   }
   fnOnSync(){
+    var bInitial = 0;
+    var oGlobal = {};
+    var aResponse = this.state.aResponse;
+    for (var i = 0; i < aResponse.length; i++) {
+        if (aResponse[i].results.intents[0] !== undefined && aResponse[i].results.intents[0].slug === "update-purchase-order") {
+            var oCurr = aResponse[i].results.entities;
+            var oObj = this.fnCheckProperties(oCurr);
+            if (oCurr.hasOwnProperty("purchase-order-number")) {
+                if (bInitial === 0) {
+                    bInitial = 1;
+                    this.oCurrObj = {};
+                    $.extend(this.oCurrObj, oObj);
+                } else if (bInitial === 1) {
+                    bInitial = 1;
+                    var aPurchaseOrder  = this.state.aPurchaseOrder.concat(this.oCurrObj);
+                    this.setState({aPurchaseOrder : aPurchaseOrder});
+                    this.oCurrObj = {};
+                    $.extend(this.oCurrObj, oObj);
+                }
 
+            } else if (bInitial === 0) {
+                $.extend(oGlobal, oObj);
+            } else if (bInitial === 1) {
+                $.extend(this.oCurrObj, oObj);
+            }
+
+
+        } else if (aResponse[i].results.intents[0] !== undefined && aResponse[i].results.intents[0].slug === "create-purchase-order") {
+            var oCurr = aResponse[i].results.entities;
+            var len = $.keys(oCurr).length;
+            this.oNewPOOrg = this.fnCreateNewPOObject(oCurr);
+            let aNewPurchaseOrder  = this.state.aNewPurchaseOrder.concat(this.oNewPOOrg);
+            this.setState({aNewPurchaseOrder : aNewPurchaseOrder});
+        } else if (aResponse[i].results.intents[0] !== undefined && aResponse[i].results.intents[0].slug === "create-quotation") {
+            var oCurr = aResponse[i].results.entities;
+            var len = $.keys(oCurr).length;
+            this.oNewQtn = this.fnCreateNewQtnObject(oCurr);
+            let aNewQuotation  = this.state.aNewQuotation.concat(this.oNewQtn);
+            this.setState({aNewQuotation : aNewQuotation});
+        }
+    }
+    if (this.oCurrObj !== undefined) {
+      let aPurchaseOrder  = this.state.aPurchaseOrder.concat(this.oCurrObj);
+      this.setState({aPurchaseOrder : aPurchaseOrder});
+    }
+    for (var i = 0; i < this.state.aPurchaseOrder.length; i++) {
+        $.extend(aPurchaseOrder[i], oGlobal);
+    }
   }
+ fnCheckProperties(oCurr) {
+    if (oCurr.hasOwnProperty("payment-term")) {
+        return {
+            "PaymentTerms": oCurr["payment-term"][0].value
+        }
+    } else if (oCurr.hasOwnProperty("delivery-date")) {
+        return {
+            "DeliveryDate": oCurr["delivery-date"][0].value
+        }
+    } else if (oCurr.hasOwnProperty("purchase-order-number")) {
+        return {
+            "PurchaseOrder": oCurr["purchase-order-number"][0].value
+        }
+    } else if (oCurr.hasOwnProperty("supplier")) {
+        return {
+            "Supplier": oCurr["supplier"][0].value
+        }
+    } else if (oCurr.hasOwnProperty("purchasing-group")) {
+        return {
+            "PurchasingGroup": oCurr["purchasing-group"][0].value
+        }
+    } else if (oCurr.hasOwnProperty("purchasing-org")) {
+        return {
+            "PurchasingOrg": oCurr["purchasing-org"][0].value
+        }
+    } else if (oCurr.hasOwnProperty("material")) {
+        return {
+            "material": oCurr["material"][0].value
+        }
+    } else if (oCurr.hasOwnProperty("plant")) {
+        return {
+            "plant": oCurr["plant"][0].value
+        }
+    } else if (oCurr.hasOwnProperty("quantity")) {
+        return {
+            "quantity": oCurr["quantity"][0].value
+        }
+    }
+
+
+}
+ fnCreateNewPOObject(oCurr) {
+    var oObj = {};
+    if (oCurr.hasOwnProperty("purchasing-group")) {
+        $.extend(oObj, {
+            "PurchasingGroup": oCurr["purchasing-group"][0].value
+        });
+    }
+    if (oCurr.hasOwnProperty("purchasing-org")) {
+        $.extend(oObj, {
+            "PurchasingOrg": oCurr["purchasing-org"][0].value
+        });
+    }
+    if (oCurr.hasOwnProperty("material")) {
+        $.extend(oObj, {
+            "material": oCurr["material"][0].value
+        });
+    }
+    if (oCurr.hasOwnProperty("plant")) {
+        $.extend(oObj, {
+            "plant": oCurr["plant"][0].value
+        });
+    }
+    if (oCurr.hasOwnProperty("quantity")) {
+        $.extend(oObj, {
+            "quantity": oCurr["quantity"][0].value
+        });
+    }
+    return oObj;
+}
+ fnCreateNewQtnObject(oCurr) {
+    var oObj = {};
+    if (oCurr.hasOwnProperty("material")) {
+        $.extend(oObj, {
+            "Material": oCurr["material"][0].value
+        });
+    }
+    if (oCurr.hasOwnProperty("sales-area")) {
+        $.extend(oObj, {
+            "Sales Area": oCurr["sales-area"][0].value
+        });
+    }
+    if (oCurr.hasOwnProperty("quantity")) {
+        $.extend(oObj, {
+            "Quantity": oCurr["quantity"][0].value
+        });
+    }
+    if (oCurr.hasOwnProperty("validity")) {
+        $.extend(oObj, {
+            "Valid Upto": oCurr["validity"][0].value
+        });
+    }
+    if (oCurr.hasOwnProperty("discount")) {
+        $.extend(oObj, {
+            "Discount": oCurr["discount"][0].value
+        });
+    }
+    return oObj;
+}
   render(){
     return(
       <div className="container-fluid custom-app">
@@ -116,9 +265,11 @@ class  CreateNote extends Component{
           </div>
         </Row>
         <Row>
-          <ReactQuill className="quill-title" theme="bubble" placeholder="Add title" value={this.state.titleHtml || " "} onChange={this.handleTitleChange} />
-          <ReactQuill id="quill" className="quill-editor" theme="bubble" placeholder="Add note" value={this.state.textHtml|| " "}
-                    onChange={this.handleChange} />
+              <ReactQuill className="quill-title" theme="bubble" placeholder="Add title" value={this.state.titleHtml || " "} onChange={this.handleTitleChange} >
+              </ReactQuill>
+              <ReactQuill id="quill" className="quill-editor" theme="bubble" placeholder="Add note" value={this.state.textHtml|| " "}
+                      onChange={this.handleChange} ></ReactQuill>
+
         </Row>
       </div>
     );
