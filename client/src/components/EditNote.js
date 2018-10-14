@@ -56,21 +56,22 @@ class EditNote extends Component{
   }
   render(){
     return(
-      <div className="container-fluid">
-        <div className="note-timestamp">{moment(this.state.note.creation_date).format('lll')}</div>
-        <Row className="button-row">
-          <Col sm="10" md="10">
-            <ReactQuill className="quill-title" theme="bubble" placeholder="Add title" value={this.state.note.titleHtml || " "} onChange={this.handleTitleChange} />
-          </Col>
-          <Col sm="2" md="2">
-            <button className="btn btn-success pull-right sync-button" onClick={this.fnOnSync}>Sync</button>
-            <button className="btn btn-primary pull-right analyse-button" onClick={this.fnOnAnalyse}>Analyse</button>
-          </Col>
+      <div className="container-fluid custom-app">
+        <Row>
+          <div>
+            <div className="note-timestamp">
+              {moment(this.state.note.creation_date).format('lll')}
+            </div>
+            <div className="note_action_buttons">
+              <button className="btn btn-xs btn-success pull-right sync-button" onClick={this.fnOnSync}>Sync</button>
+              <button className="btn btn-xs btn-primary pull-right analyse-button" onClick={this.fnOnAnalyse}>Analyse</button>
+            </div>
+          </div>
         </Row>
         <Row>
-
-        <ReactQuill id="quill" className="quill-editor" theme="bubble" placeholder="Add note" value={this.state.note.textHtml|| " "}
-                  onChange={this.handleChange} />
+          <ReactQuill className="quill-title" theme="bubble" placeholder="Add title" value={this.state.note.titleHtml || " "} onChange={this.handleTitleChange} />
+          <ReactQuill id="quill" className="quill-editor" theme="bubble" placeholder="Add note" value={this.state.note.textHtml|| " "}
+                    onChange={this.handleChange} />
         </Row>
       </div>
     );
