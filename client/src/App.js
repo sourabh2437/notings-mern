@@ -26,7 +26,7 @@ class App extends Component {
         <Row>
           <div>
             <div className="header">
-              <h1 className="display-1">Notes</h1>
+              <h1 className="h1">Notes</h1>
             </div>
             <div className="new_note">
               <Link className="pull-right" to="/create"><span className="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>New Note</Link>

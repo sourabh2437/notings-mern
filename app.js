@@ -12,12 +12,12 @@ var app = express();
 var mongoose = require('mongoose');
 mongoose.Promise = require('bluebird');
 // mongoose.connect('mongodb://localhost/mern-crud', { useNewUrlParser: true, promiseLibrary: require('bluebird') })
-//   .then(() =>  console.log('connection succesful'))
+//   .then(() =>  console.log('connection succesful to localhost/mern-crud'))
 //   .catch((err) => console.error(err));
 
 //Shiva MongoDB server ->
 mongoose.connect('mongodb://appUser:appUser@18.223.133.13:27017/training_db', { useNewUrlParser: true, promiseLibrary: require('bluebird') })
-  .then(() =>  console.log('connection succesful'))
+  .then(() =>  console.log('connection succesful to db'))
   .catch((err) => console.error(err));
 
 // view engine setup
@@ -28,11 +28,8 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-//app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'client/build')))
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname + '/client/build/index.html'))
-})
+app.use(express.static(path.join(__dirname, 'public')));
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/notes', notesRouter);
