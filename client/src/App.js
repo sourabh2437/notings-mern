@@ -33,9 +33,9 @@ class App extends Component {
             </div>
           </div>
         </Row>
-        <Row>
+        <Row className="note_tiles">
           {this.state.notes.map(note =>
-              <Col sm="10" md="5" lg="3" key={note._id} className="card-col">
+              <Col xs="12" sm="3" md="3" lg="3" key={note._id} className="card-col">
                 <Link to={`/edit/${note._id}`}>
                 <Card className="custom-note-tile">
                   <CardTitle>{note.titleValue}</CardTitle>
