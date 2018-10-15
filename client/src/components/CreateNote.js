@@ -6,7 +6,8 @@ import {Row,Col} from 'reactstrap';
 import moment from 'moment';
 import axios from 'axios';
 import { Throttle } from 'react-throttle';
-import $ from 'jquery'
+import $ from 'jquery';
+import {Modal, OverlayTrigger, Button,Popover,Tooltip,Table, tr,thead,tbody,td} from 'react-bootstrap';
 class  CreateNote extends Component{
   constructor(props){
     super(props);
@@ -17,20 +18,31 @@ class  CreateNote extends Component{
       titleHtml:"",
       creation_date : null,
       updated_date :null,
+      show:false,
       aResponse:[],
-      aPurchaseOrder:[],
-      aNewQuotation:[],
-      aNewPurchaseOrder:[]
+      aPO:[],
+      aNewQt:[],
+      aNewPO:[]
     };
+
     this.handleChange = this.handleChange.bind(this);
     this.handleTitleChange = this.handleTitleChange.bind(this);
     this.fnOnAnalyse = this.fnOnAnalyse.bind(this);
     this.fnOnSync = this.fnOnSync.bind(this);
     this.fnCallRecastAPI = this.fnCallRecastAPI.bind(this);
+    this.handleClose = this.handleClose.bind(this);
+    this.handleShow = this.handleShow.bind(this);
   }
   componentDidMount(){
       var oCurrentTime = moment().format('lll');
       this.setState({ creation_date : oCurrentTime });
+  }
+  handleClose() {
+    this.setState({ show: false });
+  }
+
+  handleShow() {
+    this.setState({ show: true });
   }
 
   handleChange(content, delta,source, editor) {
@@ -62,6 +74,12 @@ class  CreateNote extends Component{
         //this.props.history.push("/")
       });
       var aNotes = [];
+      this.setState({
+        aResponse:[],
+        aPO:[],
+        aNewQt:[],
+        aNewPO:[]
+      });
       aNotes.push(titleValue);
       for(let i=0;i<textValue.length;i++){
         if(textValue[i] !== ""){
@@ -102,9 +120,18 @@ class  CreateNote extends Component{
      }
   }
   fnOnSync(){
+    this.setState({
+      show: true,
+      aPO:[],
+      aNewQt:[],
+      aNewPO:[]
+    });
     var bInitial = 0;
     var oGlobal = {};
     var aResponse = this.state.aResponse;
+    this.aPurchaseOrder = [];
+    this.aNewQuotation = [];
+    this.aNewPurchaseOrder = [];
     for (var i = 0; i < aResponse.length; i++) {
         if (aResponse[i].results.intents[0] !== undefined && aResponse[i].results.intents[0].slug === "update-purchase-order") {
             var oCurr = aResponse[i].results.entities;
@@ -116,8 +143,7 @@ class  CreateNote extends Component{
                     $.extend(this.oCurrObj, oObj);
                 } else if (bInitial === 1) {
                     bInitial = 1;
-                    var aPurchaseOrder  = this.state.aPurchaseOrder.concat(this.oCurrObj);
-                    this.setState({aPurchaseOrder : aPurchaseOrder});
+                    this.aPurchaseOrder.push(this.oCurrObj);
                     this.oCurrObj = {};
                     $.extend(this.oCurrObj, oObj);
                 }
@@ -131,27 +157,30 @@ class  CreateNote extends Component{
 
         } else if (aResponse[i].results.intents[0] !== undefined && aResponse[i].results.intents[0].slug === "create-purchase-order") {
             var oCurr = aResponse[i].results.entities;
-            var len = $.keys(oCurr).length;
+            var len = Object.keys(oCurr).length;
             this.oNewPOOrg = this.fnCreateNewPOObject(oCurr);
-            let aNewPurchaseOrder  = this.state.aNewPurchaseOrder.concat(this.oNewPOOrg);
-            this.setState({aNewPurchaseOrder : aNewPurchaseOrder});
+            this.aNewPurchaseOrder.push(this.oNewPOOrg);
         } else if (aResponse[i].results.intents[0] !== undefined && aResponse[i].results.intents[0].slug === "create-quotation") {
             var oCurr = aResponse[i].results.entities;
-            var len = $.keys(oCurr).length;
+            var len = Object.keys(oCurr).length;
             this.oNewQtn = this.fnCreateNewQtnObject(oCurr);
-            let aNewQuotation  = this.state.aNewQuotation.concat(this.oNewQtn);
-            this.setState({aNewQuotation : aNewQuotation});
+            this.aNewQuotation.push(this.oNewQtn);
         }
     }
     if (this.oCurrObj !== undefined) {
-      let aPurchaseOrder  = this.state.aPurchaseOrder.concat(this.oCurrObj);
-      this.setState({aPurchaseOrder : aPurchaseOrder});
+      this.aPurchaseOrder.push(this.oCurrObj);
     }
-    for (var i = 0; i < this.state.aPurchaseOrder.length; i++) {
-        $.extend(aPurchaseOrder[i], oGlobal);
+    for (var i = 0; i < this.aPurchaseOrder.length; i++) {
+        $.extend(this.aPurchaseOrder[i], oGlobal);
     }
+    this.setState({
+        aPO: [ ...this.state.aPO, ...this.aPurchaseOrder ],
+        aNewQt: [ ...this.state.aNewQt, ...this.aNewQuotation ],
+        aNewPO: [ ...this.state.aNewQt, ...this.aNewPurchaseOrder ]
+    })
+
   }
- fnCheckProperties(oCurr) {
+  fnCheckProperties(oCurr) {
     if (oCurr.hasOwnProperty("payment-term")) {
         return {
             "PaymentTerms": oCurr["payment-term"][0].value
@@ -189,9 +218,7 @@ class  CreateNote extends Component{
             "quantity": oCurr["quantity"][0].value
         }
     }
-
-
-}
+  }
  fnCreateNewPOObject(oCurr) {
     var oObj = {};
     if (oCurr.hasOwnProperty("purchasing-group")) {
@@ -221,7 +248,7 @@ class  CreateNote extends Component{
     }
     return oObj;
 }
- fnCreateNewQtnObject(oCurr) {
+  fnCreateNewQtnObject(oCurr) {
     var oObj = {};
     if (oCurr.hasOwnProperty("material")) {
         $.extend(oObj, {
@@ -251,6 +278,12 @@ class  CreateNote extends Component{
     return oObj;
 }
   render(){
+    const popover = (
+      <Popover id="modal-popover" title="popover">
+        very popover. such engagement
+      </Popover>
+    );
+    const tooltip = <Tooltip id="modal-tooltip">wow.</Tooltip>;
     return(
       <div className="container-fluid custom-app">
         <Row>
@@ -270,6 +303,85 @@ class  CreateNote extends Component{
               <ReactQuill id="quill" className="quill-editor" theme="bubble" placeholder="Add note" value={this.state.textHtml|| " "}
                       onChange={this.handleChange} ></ReactQuill>
 
+        </Row>
+        <Row>
+          <div>
+            <Modal show={this.state.show} onHide={this.handleClose}>
+              <Modal.Header closeButton>
+                <Modal.Title>Notings</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                    {this.state.aPO.map((po) =>
+                        <Table striped bordered condensed hover>
+                          <thead>
+                            <tr>
+                              <th>Fields</th>
+                              <th>New Values</th>
+                              <th>Old Values</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {
+                            Object.keys(po).map((key,index) =>
+                                <tr key={index}>
+                                  <td>{key}</td>
+                                  <td>{Object.values(po)[index]}</td>
+                                  <td>Old</td>
+                                </tr>
+                              )
+                            }
+                          </tbody>
+                       </Table>
+                     )}
+                      {this.state.aNewQt.map((qt) =>
+                          <Table striped bordered condensed hover>
+                            <thead>
+                              <tr>
+                                <th>Fields</th>
+                                <th>New Values</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {
+                              Object.keys(qt).map((key,index) =>
+                                  <tr key={index}>
+                                    <td>{key}</td>
+                                    <td>{Object.values(qt)[index]}</td>
+                                  </tr>
+                                )
+                              }
+                            </tbody>
+                         </Table>
+                        )
+                    }
+                    {this.state.aNewPO.map((newPo) =>
+                        <Table striped bordered condensed hover>
+                          <thead>
+                            <tr>
+                              <th>Fields</th>
+                              <th>New Values</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {
+                            Object.keys(newPo).map((key,index) =>
+                                <tr key={index}>
+                                  <td>{key}</td>
+                                  <td>{Object.values(newPo)[index]}</td>
+                                </tr>
+                              )
+                            }
+                          </tbody>
+                       </Table>
+                      )
+                  }
+              </Modal.Body>
+              <Modal.Footer>
+                <Button className="btn btn-success" onClick={this.handleClose}>Apply Changes</Button>
+                <Button className="btn btn-primary" onClick={this.handleClose}>Cancel</Button>
+              </Modal.Footer>
+            </Modal>
+          </div>
         </Row>
       </div>
     );
