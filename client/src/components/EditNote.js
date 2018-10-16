@@ -143,6 +143,8 @@ class EditNote extends Component{
   fnOnSync(){
     this.setState({ show: true });
     var bInitial = 0;
+    var bInitial2 = 0;
+    var bInitial3 = 0;
     var oGlobal = {};
     var aResponse = this.state.aResponse;
     this.aPurchaseOrder = [];
@@ -172,19 +174,43 @@ class EditNote extends Component{
 
 
         } else if (aResponse[i].results.intents[0] !== undefined && aResponse[i].results.intents[0].slug === "create-purchase-order") {
-            var oCurr = aResponse[i].results.entities;
-            var len = Object.keys(oCurr).length;
-            this.oNewPOOrg = this.fnCreateNewPOObject(oCurr);
-            this.aNewPurchaseOrder.push(this.oNewPOOrg);
+          var oCurr = aResponse[i].results.entities;
+          var oObj = this.fnCheckProperties(oCurr);
+          if(bInitial3 ===0 ){
+            bInitial3 = 1;
+            this.oNewPOObj =  {};
+            $.extend(this.oNewPOObj, oObj);
+          }else{
+            $.extend(this.oNewPOObj, oObj);
+          }
+            // var oCurr = aResponse[i].results.entities;
+            // var len = Object.keys(oCurr).length;
+            // this.oNewPOOrg = this.fnCreateNewPOObject(oCurr);
+            // this.aNewPurchaseOrder.push(this.oNewPOOrg);
         } else if (aResponse[i].results.intents[0] !== undefined && aResponse[i].results.intents[0].slug === "create-quotation") {
-            var oCurr = aResponse[i].results.entities;
-            var len = Object.keys(oCurr).length;
-            this.oNewQtn = this.fnCreateNewQtnObject(oCurr);
-            this.aNewQuotation.push(this.oNewQtn);
+          // var oCurr = aResponse[i].results.entities;
+          // var len = Object.keys(oCurr).length;
+          // this.oNewQtn = this.fnCreateNewQtnObject(oCurr);
+          // this.aNewQuotation.push(this.oNewQtn);
+          var oCurr = aResponse[i].results.entities;
+          var oObj = this.fnCheckProperties(oCurr);
+          if(bInitial2 ===0 ){
+            bInitial2 = 1;
+            this.oCurrQtnObj =  {};
+            $.extend(this.oCurrQtnObj, oObj);
+          }else{
+            $.extend(this.oCurrQtnObj, oObj);
+          }
         }
     }
     if (this.oCurrObj !== undefined) {
       this.aPurchaseOrder.push(this.oCurrObj);
+    }
+    if(this.oCurrQtnObj!== undefined){
+      this.aNewQuotation.push(this.oCurrQtnObj);
+    }
+    if(this.oNewPOObj!== undefined){
+      this.aNewPurchaseOrder.push(this.oNewPOObj);
     }
     for (var i = 0; i < this.aPurchaseOrder.length; i++) {
         $.extend(this.aPurchaseOrder[i], oGlobal);
@@ -232,6 +258,20 @@ class EditNote extends Component{
     } else if (oCurr.hasOwnProperty("quantity")) {
         return {
             "quantity": oCurr["quantity"][0].value
+        }
+    }else if (oCurr.hasOwnProperty("sales-area")) {
+        return {
+            "SalesArea": oCurr["sales-area"][0].value
+        }
+    }
+    else if (oCurr.hasOwnProperty("validity")) {
+        return {
+            "validity": oCurr["validity"][0].value
+        }
+    }
+    else if (oCurr.hasOwnProperty("discount")) {
+        return {
+            "discount": oCurr["discount"][0].value
         }
     }
   }
@@ -325,7 +365,8 @@ class EditNote extends Component{
                 <Modal.Title>Notings</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                    {this.state.aPO.map((po) =>
+                    {this.state.aPO.map((po,itr) =>
+                      <div key={itr}>Update Purchase Order
                         <Table striped bordered condensed hover>
                           <thead>
                             <tr>
@@ -346,8 +387,10 @@ class EditNote extends Component{
                             }
                           </tbody>
                        </Table>
+                     </div>
                      )}
-                      {this.state.aNewQt.map((qt) =>
+                      {this.state.aNewQt.map((qt,itr) =>
+                        <div key={itr}>Create new Sales quotaion
                           <Table striped bordered condensed hover>
                             <thead>
                               <tr>
@@ -366,9 +409,11 @@ class EditNote extends Component{
                               }
                             </tbody>
                          </Table>
+                       </div>
                         )
                     }
-                    {this.state.aNewPO.map((newPo) =>
+                    {this.state.aNewPO.map((newPo,itr) =>
+                      <div key={itr}>Create new Purchase Order
                         <Table striped bordered condensed hover>
                           <thead>
                             <tr>
@@ -387,6 +432,7 @@ class EditNote extends Component{
                             }
                           </tbody>
                        </Table>
+                     </div>
                       )
                   }
               </Modal.Body>
