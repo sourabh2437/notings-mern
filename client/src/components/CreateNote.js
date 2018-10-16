@@ -12,6 +12,7 @@ class  CreateNote extends Component{
   constructor(props){
     super(props);
     this.state = {
+      note_id:"",
       textValue:[],
       titleValue:"",
       textHtml:"",
@@ -19,6 +20,7 @@ class  CreateNote extends Component{
       creation_date : null,
       updated_date :null,
       show:false,
+      saved:false,
       aResponse:[],
       aPO:[],
       aNewQt:[],
@@ -54,6 +56,32 @@ class  CreateNote extends Component{
       textHtml : content,
       updated_date: oTime
     });
+    var that = this;
+    this.oTextDelta = delta;
+    this.oTextDelta = this.oTextDelta.compose(delta);
+    setInterval(function(){
+        const { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date } = that.state;
+        if(!that.state.saved){
+          axios.post('/notes', { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date })
+           .then(result => {
+             that.setState({
+               note_id : result.data._id,
+               saved: true
+              });
+             //this.props.history.push("/")
+           });
+        }else{
+          if(Object.keys(that.oTextDelta).length !== 0 && that.oTextDelta.length() > 0){
+            axios.put('/notes/' + that.state.note_id, { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date })
+              .then((result) => {
+                //this.props.history.push("/")
+              });
+              that.oTextDelta = {};
+          }
+
+
+      }
+    },5000);
   }
 
   handleTitleChange(content, delta, source, editor) {
@@ -64,15 +92,36 @@ class  CreateNote extends Component{
       titleHtml : content,
       updated_date: oTime
      });
+     var that = this;
+     this.oTitleDelta = delta;
+     this.oTitleDelta = this.oTitleDelta.compose(delta);
+     setInterval(function(){
+         const { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date } = that.state;
+         if(titleValue!==""){
+           if(!that.state.saved){
+             axios.post('/notes', { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date })
+              .then(result => {
+                that.setState({
+                  note_id : result.data._id,
+                  saved: true
+                 });
+                //this.props.history.push("/")
+              });
+           }else{
+               if(titleValue!=="" && (Object.keys(that.oTitleDelta).length !== 0 && that.oTitleDelta.length() > 0)){
+                   axios.put('/notes/' + that.state.note_id, { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date })
+                     .then((result) => {
+                       //this.props.history.push("/")
+                     });
+                     that.oTitleDelta = {};
+               }
+             }
+         }
+
+     },5000);
   }
   fnOnAnalyse(){
      const { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date } = this.state;
-     axios.post('/notes', { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date })
-      .then((result) => {
-        //this.newNoteId = result.data._id;
-        //console.log(result);
-        //this.props.history.push("/")
-      });
       var aNotes = [];
       this.setState({
         aResponse:[],
@@ -121,17 +170,17 @@ class  CreateNote extends Component{
   }
   fnOnSync(){
     this.setState({
-      show: true,
-      aPO:[],
-      aNewQt:[],
-      aNewPO:[]
-    });
-    var bInitial = 0;
-    var oGlobal = {};
-    var aResponse = this.state.aResponse;
-    this.aPurchaseOrder = [];
-    this.aNewQuotation = [];
-    this.aNewPurchaseOrder = [];
+     show: true,
+     aPO:[],
+     aNewQt:[],
+     aNewPO:[]
+   });
+   var bInitial = 0;
+   var oGlobal = {};
+   var aResponse = this.state.aResponse;
+   this.aPurchaseOrder = [];
+   this.aNewQuotation = [];
+   this.aNewPurchaseOrder = [];
     for (var i = 0; i < aResponse.length; i++) {
         if (aResponse[i].results.intents[0] !== undefined && aResponse[i].results.intents[0].slug === "update-purchase-order") {
             var oCurr = aResponse[i].results.entities;
@@ -298,7 +347,9 @@ class  CreateNote extends Component{
           </div>
         </Row>
         <Row>
+
               <ReactQuill className="quill-title" theme="bubble" placeholder="Add title" value={this.state.titleHtml || " "} onChange={this.handleTitleChange} >
+
               </ReactQuill>
               <ReactQuill id="quill" className="quill-editor" theme="bubble" placeholder="Add note" value={this.state.textHtml|| " "}
                       onChange={this.handleChange} ></ReactQuill>

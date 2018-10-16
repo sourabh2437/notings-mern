@@ -8,6 +8,7 @@ import {Row,Col} from 'reactstrap';
 import moment from 'moment';
 import $ from 'jquery';
 import {Modal, OverlayTrigger, Button,Popover,Tooltip,Table, tr,thead,tbody,td} from 'react-bootstrap';
+const { Delta } = ReactQuill;
 class EditNote extends Component{
   constructor(props){
     super(props);
@@ -48,16 +49,43 @@ class EditNote extends Component{
     note.updated_date = moment().format('lll');
     note.textHtml =  content;
     this.setState({note});
+    var that=this;
+    this.oTextDelta = delta;
+    this.oTextDelta = this.oTextDelta.compose(delta);
+    setTimeout(function(){
+        const { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date } = that.state.note;
+        if(Object.keys(that.oTextDelta).length !== 0 && that.oTextDelta.length() > 0){
+          axios.put('/notes/' + that.props.match.params.id, { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date })
+            .then((result) => {
+              //this.props.history.push("/")
+            });
+            that.oTextDelta = {};
+        }
+
+
+    },5000);
   }
 
   handleTitleChange(content, delta, source, editor) {
     var sTitle = editor.getText().split("\n")[0];
     let note = {...this.state.note};
-
     note.titleValue =  sTitle;
     note.titleHtml =  content;
     note.updated_date = moment().format('lll');
     this.setState({note});
+    var that=this;
+    this.oTitleDelta = delta;
+    this.oTitleDelta = this.oTitleDelta.compose(delta);
+    setTimeout(function(){
+        const { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date } = that.state.note;
+        if(titleValue!=="" && (Object.keys(that.oTitleDelta).length !== 0 && that.oTitleDelta.length() > 0)){
+            axios.put('/notes/' + that.props.match.params.id, { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date })
+              .then((result) => {
+                //this.props.history.push("/")
+              });
+              that.oTitleDelta = {};
+        }
+    },5000);
   }
 
   fnOnAnalyse(){
