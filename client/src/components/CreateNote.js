@@ -169,91 +169,100 @@ class  CreateNote extends Component{
      }
   }
   fnOnSync(){
-    this.setState({
-     show: true,
-     aPO:[],
-     aNewQt:[],
-     aNewPO:[]
-   });
-   var bInitial = 0;
-   var bInitial2 = 0;
-   var bInitial3 = 0;
-   var oGlobal = {};
-   var aResponse = this.state.aResponse;
-   this.aPurchaseOrder = [];
-   this.aNewQuotation = [];
-   this.aNewPurchaseOrder = [];
+    this.setState({ show: true });
+    var bInitial = 0;
+    var bInitial2 = 0;
+    var bInitial3 = 0;
+    this.oGlobal = {};
+    var aResponse = this.state.aResponse;
+    this.aPurchaseOrder = [];
+    this.aNewQuotation = [];
+    this.aNewPurchaseOrder = [];
+    this.sIntent = "";
+    this.oPOobj = {};
+    this.oNewPOobj = {};
+    this.oNewQtnobj = {};
     for (var i = 0; i < aResponse.length; i++) {
-        if (aResponse[i].results.intents[0] !== undefined && aResponse[i].results.intents[0].slug === "update-purchase-order") {
-            var oCurr = aResponse[i].results.entities;
-            var oObj = this.fnCheckProperties(oCurr);
-            if (oCurr.hasOwnProperty("purchase-order-number")) {
-                if (bInitial === 0) {
-                    bInitial = 1;
-                    this.oCurrObj = {};
-                    $.extend(this.oCurrObj, oObj);
-                } else if (bInitial === 1) {
-                    bInitial = 1;
-                    this.aPurchaseOrder.push(this.oCurrObj);
-                    this.oCurrObj = {};
-                    $.extend(this.oCurrObj, oObj);
-                }
-
-            } else if (bInitial === 0) {
-                $.extend(oGlobal, oObj);
-            } else if (bInitial === 1) {
-                $.extend(this.oCurrObj, oObj);
-            }
-
-
-        } else if (aResponse[i].results.intents[0] !== undefined && aResponse[i].results.intents[0].slug === "create-purchase-order") {
-          var oCurr = aResponse[i].results.entities;
-          var oObj = this.fnCheckProperties(oCurr);
-          if(bInitial3 ===0 ){
-            bInitial3 = 1;
-            this.oNewPOObj =  {};
-            $.extend(this.oNewPOObj, oObj);
-          }else{
-            $.extend(this.oNewPOObj, oObj);
+        debugger;
+      var oEntities;
+      if(aResponse[i].results.intents[0]!== undefined){
+        oEntities = aResponse[i].results.entities;
+        if(Object.keys(oEntities).length === 1){
+            //Change intents here
+            //this.sIntent = Object.keys(oEntities)[0];
+            bInitial2 = 0;
+            bInitial3 = 0;
+          this.sIntent = aResponse[i].results.intents[0].slug;//=== "create-purchase-order";
+        }else if(Object.keys(oEntities).length === 2 && oEntities.hasOwnProperty("purchase-order-number")){
+          this.sIntent = aResponse[i].results.intents[0].slug;
+          //this.sIntent = Object.keys(oEntities)[0];
+          bInitial = 0;
+          //this.oPOGlobalObj = this.fnCheckProperties(oEntities);
+          //$.extend(this.oPOGlobalObj,oGlobalObj);
+        }
+        else if(oEntities.hasOwnProperty("supplier")){
+          //handle global values like supplier
+          var oGlobalObj = this.fnCheckProperties(oEntities);
+          $.extend(this.oGlobal,oGlobalObj);
+        }
+      }
+      oEntities = aResponse[i].results.entities;
+      var oObj = this.fnCheckProperties(oEntities);
+      if(this.sIntent === "update-purchase-order"){
+        if(bInitial === 0){
+          if (Object.keys(this.oPOobj).length !== 0) {
+          this.aPurchaseOrder.push(this.oPOobj);
+          this.oPOobj = {};
           }
-            // var oCurr = aResponse[i].results.entities;
-            // var len = Object.keys(oCurr).length;
-            // this.oNewPOOrg = this.fnCreateNewPOObject(oCurr);
-            // this.aNewPurchaseOrder.push(this.oNewPOOrg);
-        } else if (aResponse[i].results.intents[0] !== undefined && aResponse[i].results.intents[0].slug === "create-quotation") {
-            // var oCurr = aResponse[i].results.entities;
-            // var len = Object.keys(oCurr).length;
-            // this.oNewQtn = this.fnCreateNewQtnObject(oCurr);
-            // this.aNewQuotation.push(this.oNewQtn);
-            var oCurr = aResponse[i].results.entities;
-            var oObj = this.fnCheckProperties(oCurr);
-            if(bInitial2 ===0 ){
-              bInitial2 = 1;
-              this.oCurrQtnObj =  {};
-              $.extend(this.oCurrQtnObj, oObj);
-            }else{
-              $.extend(this.oCurrQtnObj, oObj);
-            }
+          bInitial = 1;
+        }
+        $.extend(this.oPOobj, oObj);
+      }else if(this.sIntent === "create-purchase-order"){
+        if(bInitial2 === 0){
+          if (Object.keys(this.oNewPOobj).length !== 0) {
+          this.aNewPurchaseOrder.push(this.oNewPOobj);
+          this.oNewPOobj = {};
+          }
+          bInitial2 = 1;
+        }
+        $.extend(this.oNewPOobj, oObj);
+      }else if(this.sIntent === "create-quotation"){
+        if(bInitial3 === 0){
+          if (Object.keys(this.oNewQtnobj).length !== 0) {
+            this.aNewQuotation.push(this.oNewQtnobj);
+            this.oNewQtnobj = {};
+          }
+            bInitial3 = 1;
 
         }
+        $.extend(this.oNewQtnobj, oObj);
+      }
     }
-    if (this.oCurrObj !== undefined) {
-      this.aPurchaseOrder.push(this.oCurrObj);
+
+    if (Object.keys(this.oPOobj).length !== 0) {
+      this.aPurchaseOrder.push(this.oPOobj);
+      for (var i = 0; i < this.aPurchaseOrder.length; i++) {
+          $.extend(this.aPurchaseOrder[i], this.oGlobal);
+      }
     }
-    if(this.oCurrQtnObj!== undefined){
-      this.aNewQuotation.push(this.oCurrQtnObj);
+    if(Object.keys(this.oNewQtnobj).length !== 0){
+      //$.extend(this.oNewQtnobj, this.oGlobal);
+      this.aNewQuotation.push(this.oNewQtnobj);
+      for (var i = 0; i < this.aNewQuotation.length; i++) {
+          $.extend(this.aNewQuotation[i], this.oGlobal);
+      }
     }
-    if(this.oNewPOObj!== undefined){
-      this.aNewPurchaseOrder.push(this.oNewPOObj);
-    }
-    for (var i = 0; i < this.aPurchaseOrder.length; i++) {
-        $.extend(this.aPurchaseOrder[i], oGlobal);
+    if(Object.keys(this.oNewPOobj).length !== 0){
+      this.aNewPurchaseOrder.push(this.oNewPOobj);
+      for (var i = 0; i < this.aNewPurchaseOrder.length; i++) {
+          $.extend(this.aNewPurchaseOrder[i], this.oGlobal);
+      }
     }
     this.setState({
         aPO: [ ...this.state.aPO, ...this.aPurchaseOrder ],
         aNewQt: [ ...this.state.aNewQt, ...this.aNewQuotation ],
         aNewPO: [ ...this.state.aNewQt, ...this.aNewPurchaseOrder ]
-    })
+    });
 
   }
   fnCheckProperties(oCurr) {
