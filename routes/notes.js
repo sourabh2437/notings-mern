@@ -3,7 +3,7 @@ var router = express.Router();
 var mongoose = require('mongoose');
 var Note = require('../models/Note.js');
 
-/* GET ALL BOOKS */
+/* GET ALL NOTES */
 router.get('/', function(req, res, next) {
   Note.find(function (err, products) {
     if (err) return next(err);
@@ -11,7 +11,7 @@ router.get('/', function(req, res, next) {
   });
 });
 
-/* GET SINGLE BOOK BY ID */
+/* GET SINGLE NOTE BY ID */
 router.get('/:id', function(req, res, next) {
   Note.findById(req.params.id, function (err, post) {
     if (err) return next(err);
@@ -19,7 +19,7 @@ router.get('/:id', function(req, res, next) {
   });
 });
 
-/* SAVE BOOK */
+/* SAVE NOTE */
 router.post('/', function(req, res, next) {
   Note.create(req.body, function (err, post) {
     if (err) return next(err);
@@ -27,7 +27,7 @@ router.post('/', function(req, res, next) {
   });
 });
 
-/* UPDATE BOOK */
+/* UPDATE NOTE */
 router.put('/:id', function(req, res, next) {
   Note.findByIdAndUpdate(req.params.id, req.body, function (err, post) {
     if (err) return next(err);
@@ -35,7 +35,7 @@ router.put('/:id', function(req, res, next) {
   });
 });
 
-/* DELETE BOOK */
+/* DELETE NOTE */
 router.delete('/:id', function(req, res, next) {
   Note.findByIdAndRemove(req.params.id, req.body, function (err, post) {
     if (err) return next(err);

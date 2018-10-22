@@ -2,12 +2,11 @@ import React, {Component} from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.bubble.css';
 import '../App.css';
-import {Row,Col} from 'reactstrap';
+import {Row} from 'reactstrap';
 import moment from 'moment';
 import axios from 'axios';
-import { Throttle } from 'react-throttle';
 import $ from 'jquery';
-import {Modal, OverlayTrigger, Button,Popover,Tooltip,Table, tr,thead,tbody,td} from 'react-bootstrap';
+import {Modal, Button,Table,tr,thead,tbody,td} from 'react-bootstrap';
 class  CreateNote extends Component{
   constructor(props){
     super(props);
@@ -34,6 +33,7 @@ class  CreateNote extends Component{
     this.fnCallRecastAPI = this.fnCallRecastAPI.bind(this);
     this.handleClose = this.handleClose.bind(this);
     this.handleShow = this.handleShow.bind(this);
+    this.fnOnDeleteNote = this.fnOnDeleteNote.bind(this);
   }
   componentDidMount(){
       var oCurrentTime = moment().format('lll');
@@ -62,6 +62,7 @@ class  CreateNote extends Component{
     setInterval(function(){
         const { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date } = that.state;
         if(!that.state.saved){
+          debugger;
           axios.post('/notes', { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date })
            .then(result => {
              that.setState({
@@ -71,6 +72,7 @@ class  CreateNote extends Component{
              //this.props.history.push("/")
            });
         }else{
+          debugger;
           if(Object.keys(that.oTextDelta).length !== 0 && that.oTextDelta.length() > 0){
             axios.put('/notes/' + that.state.note_id, { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date })
               .then((result) => {
@@ -97,7 +99,8 @@ class  CreateNote extends Component{
      this.oTitleDelta = this.oTitleDelta.compose(delta);
      setInterval(function(){
          const { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date } = that.state;
-         if(titleValue!==""){
+         //if(titleValue!==""){
+         debugger;
            if(!that.state.saved){
              axios.post('/notes', { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date })
               .then(result => {
@@ -108,7 +111,7 @@ class  CreateNote extends Component{
                 //this.props.history.push("/")
               });
            }else{
-               if(titleValue!=="" && (Object.keys(that.oTitleDelta).length !== 0 && that.oTitleDelta.length() > 0)){
+               if(Object.keys(that.oTitleDelta).length !== 0 && that.oTitleDelta.length() > 0){
                    axios.put('/notes/' + that.state.note_id, { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date })
                      .then((result) => {
                        //this.props.history.push("/")
@@ -116,12 +119,22 @@ class  CreateNote extends Component{
                      that.oTitleDelta = {};
                }
              }
-         }
+    //     }
 
      },5000);
   }
+  fnOnDeleteNote(){
+    let id = this.state.note_id;
+    if(id !== undefined && id!==""){
+      axios.delete('/notes/'+id)
+        .then((result) => {
+          this.props.history.push("/")
+        });
+    }
+
+  }
   fnOnAnalyse(){
-     const { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date } = this.state;
+     const { textValue, titleValue } = this.state;
       var aNotes = [];
       this.setState({
         aResponse:[],
@@ -241,20 +254,20 @@ class  CreateNote extends Component{
 
     if (Object.keys(this.oPOobj).length !== 0) {
       this.aPurchaseOrder.push(this.oPOobj);
-      for (var i = 0; i < this.aPurchaseOrder.length; i++) {
+      for (let i = 0; i < this.aPurchaseOrder.length; i++) {
           $.extend(this.aPurchaseOrder[i], this.oGlobal);
       }
     }
     if(Object.keys(this.oNewQtnobj).length !== 0){
       //$.extend(this.oNewQtnobj, this.oGlobal);
       this.aNewQuotation.push(this.oNewQtnobj);
-      for (var i = 0; i < this.aNewQuotation.length; i++) {
+      for (let i = 0; i < this.aNewQuotation.length; i++) {
           $.extend(this.aNewQuotation[i], this.oGlobal);
       }
     }
     if(Object.keys(this.oNewPOobj).length !== 0){
       this.aNewPurchaseOrder.push(this.oNewPOobj);
-      for (var i = 0; i < this.aNewPurchaseOrder.length; i++) {
+      for (let i = 0; i < this.aNewPurchaseOrder.length; i++) {
           $.extend(this.aNewPurchaseOrder[i], this.oGlobal);
       }
     }
@@ -378,12 +391,6 @@ class  CreateNote extends Component{
     return oObj;
 }
   render(){
-    const popover = (
-      <Popover id="modal-popover" title="popover">
-        very popover. such engagement
-      </Popover>
-    );
-    const tooltip = <Tooltip id="modal-tooltip">wow.</Tooltip>;
     return(
       <div className="container-fluid custom-app">
         <Row>
@@ -392,6 +399,10 @@ class  CreateNote extends Component{
               {this.state.creation_date}
             </div>
             <div className="note_action_buttons">
+              <button className="btn btn-xs btn-danger pull-right delete-note"
+                onClick={this.fnOnDeleteNote} >
+                <span className="glyphicon glyphicon-trash"></span>
+              </button>
               <button className="btn btn-xs btn-success pull-right sync-button" onClick={this.fnOnSync}>Sync</button>
               <button className="btn btn-xs btn-primary pull-right analyse-button" onClick={this.fnOnAnalyse}>Analyse</button>
             </div>

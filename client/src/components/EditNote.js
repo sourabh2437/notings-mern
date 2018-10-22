@@ -4,10 +4,10 @@ import axios from 'axios';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.bubble.css';
 import '../App.css';
-import {Row,Col} from 'reactstrap';
+import {Row} from 'reactstrap';
 import moment from 'moment';
 import $ from 'jquery';
-import {Modal, OverlayTrigger, Button,Popover,Tooltip,Table, tr,thead,tbody,td} from 'react-bootstrap';
+import {Modal,Button,Table,tr,thead,tbody,td} from 'react-bootstrap';
 const { Delta } = ReactQuill;
 class EditNote extends Component{
   constructor(props){
@@ -27,6 +27,7 @@ class EditNote extends Component{
     this.fnCallRecastAPI = this.fnCallRecastAPI.bind(this);
     this.handleClose = this.handleClose.bind(this);
     this.handleShow = this.handleShow.bind(this);
+    this.fnOnDeleteNote = this.fnOnDeleteNote.bind(this);
   }
   componentDidMount(){
     axios.get('/notes/' + this.props.match.params.id)
@@ -87,7 +88,13 @@ class EditNote extends Component{
         }
     },5000);
   }
-
+  fnOnDeleteNote(){
+    let id = this.state.note._id;
+    axios.delete('/notes/'+id)
+      .then((result) => {
+        this.props.history.push("/")
+      });
+  }
   fnOnAnalyse(){
     const { textValue, titleValue, textHtml, titleHtml, creation_date, updated_date } = this.state.note;
 
@@ -301,20 +308,20 @@ class EditNote extends Component{
 
     if (Object.keys(this.oPOobj).length !== 0) {
       this.aPurchaseOrder.push(this.oPOobj);
-      for (var i = 0; i < this.aPurchaseOrder.length; i++) {
+      for (let i = 0; i < this.aPurchaseOrder.length; i++) {
           $.extend(this.aPurchaseOrder[i], this.oGlobal);
       }
     }
     if(Object.keys(this.oNewQtnobj).length !== 0){
       //$.extend(this.oNewQtnobj, this.oGlobal);
       this.aNewQuotation.push(this.oNewQtnobj);
-      for (var i = 0; i < this.aNewQuotation.length; i++) {
+      for (let i = 0; i < this.aNewQuotation.length; i++) {
           $.extend(this.aNewQuotation[i], this.oGlobal);
       }
     }
     if(Object.keys(this.oNewPOobj).length !== 0){
       this.aNewPurchaseOrder.push(this.oNewPOobj);
-      for (var i = 0; i < this.aNewPurchaseOrder.length; i++) {
+      for (let i = 0; i < this.aNewPurchaseOrder.length; i++) {
           $.extend(this.aNewPurchaseOrder[i], this.oGlobal);
       }
     }
@@ -436,12 +443,6 @@ class EditNote extends Component{
     return oObj;
 }
   render(){
-    const popover = (
-      <Popover id="modal-popover" title="popover">
-        very popover. such engagement
-      </Popover>
-    );
-    const tooltip = <Tooltip id="modal-tooltip">wow.</Tooltip>;
     return(
       <div className="container-fluid custom-app">
         <Row>
@@ -450,8 +451,13 @@ class EditNote extends Component{
               {moment(this.state.note.creation_date).format('lll')}
             </div>
             <div className="note_action_buttons">
+              <button className="btn btn-xs btn-danger pull-right delete-note"
+                onClick={this.fnOnDeleteNote} >
+                <span className="glyphicon glyphicon-trash"></span>
+              </button>
               <button className="btn btn-xs btn-success pull-right sync-button" onClick={this.fnOnSync}>Sync</button>
               <button className="btn btn-xs btn-primary pull-right analyse-button" onClick={this.fnOnAnalyse}>Analyse</button>
+
             </div>
           </div>
         </Row>

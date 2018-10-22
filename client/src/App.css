@@ -20,6 +20,29 @@
     float: right;
     margin-right: 30px;
   }
+  .delete-multiple-notes{
+    margin-top: 3px;
+    margin-bottom: 20px;
+    float: right;
+    margin-left: 5px;
+  }
+  .checkBox:hover{
+     transform: scale(2.0);
+  }
+  .checkBox{
+    margin-left: 30px;
+    transition: all 10ms ease-in-out;
+  }
+  .card-data{
+    width:70%;
+    justify-content:space-between;
+  }
+  .edit-button{
+    margin-top: 3px;
+    margin-bottom: 20px;
+    float: right;
+    margin-left: 10px;
+  }
   .custom-header{
     margin-left: 10px;
     padding-bottom: 50px;
@@ -98,13 +121,16 @@
   }
   .sync-button{
     margin-top: 10px;
-    margin-right:10px;
     margin-left: 5px;
   }
   .analyse-button{
     margin-top: 10px;
     margin-left: 5px;
-
+  }
+  .delete-note{
+    margin-top: 10px;
+    margin-right:10px;
+    margin-left: 5px;
   }
 
   /*CSS for Modal*/
