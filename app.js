@@ -10,15 +10,18 @@ var notesRouter = require('./routes/notes');
 var app = express();
 
 var mongoose = require('mongoose');
-mongoose.Promise = require('bluebird');
-// mongoose.connect('mongodb://localhost/mern-crud', { useNewUrlParser: true, promiseLibrary: require('bluebird') })
+mongoose.connect('mongodb://sourabh-admin:sourabh1234@ds115854.mlab.com:15854/smart-notes', { useNewUrlParser: true, promiseLibrary: require('bluebird') })
+  .then(() =>  console.log('connection succesful to MongoDB/m-lab/Smart Notes DB'))
+  .catch((err) => console.error(err));
+// mongoose.Promise = require('bluebird');
+// mongoose.connect('mongodb://localhost/journal-308', { useNewUrlParser: true, promiseLibrary: require('bluebird') })
 //   .then(() =>  console.log('connection succesful to localhost/mern-crud'))
 //   .catch((err) => console.error(err));
 
 //Shiva MongoDB server ->
-mongoose.connect('mongodb://appUser:appUser@18.223.133.13:27017/training_db', { useNewUrlParser: true, promiseLibrary: require('bluebird') })
-  .then(() =>  console.log('connection succesful to db'))
-  .catch((err) => console.error(err));
+// mongoose.connect('mongodb://appUser:appUser@18.223.133.13:27017/training_db', { useNewUrlParser: true, promiseLibrary: require('bluebird') })
+//   .then(() =>  console.log('connection succesful to db'))
+//   .catch((err) => console.error(err));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
