@@ -465,7 +465,7 @@ class CreateNote extends Component {
             <Modal.Body>
               <div>
                 The job
-                <strong> SJHFS651CDSSJCN23VKDNVDSDSD232  
+                <strong> SJHFS651CDSSJCN23VKDSNVDSDSD232
                 </strong>
                 has been scheduled.</div>
             </Modal.Body>
@@ -520,6 +520,7 @@ class CreateNote extends Component {
                   </Table>
                 </div>)
               }
+
               {
                 this.state.aNewPO.map((newPo) => <div>Create new Purchase Order
                   <Table striped="striped" bordered="bordered" condensed="condensed" hover="hover">

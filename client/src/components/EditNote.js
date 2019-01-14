@@ -533,7 +533,7 @@ class EditNote extends Component {
             <Modal.Body>
               <div>
                 The job
-                <strong> QFADS1CDSSJCN23VKDNVDSDSD232  
+                <strong> QFADS1CDSSJCN23VKDNVDSDS2D232  
                   </strong>
                 has been scheduled.</div>
             </Modal.Body>
